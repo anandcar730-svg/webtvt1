@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MannaTV — Watch Live</title>
+<meta name="description" content="MannaTV — Christian television. Watch live worship, sermons, Bible study and family programmes online.">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --panel: #161a22;
+    --panel-2: #1d222c;
+    --line: #2a3140;
+    --text: #f2efe8;
+    --muted: #9aa3b2;
+    --gold: #e9b44c;
+    --gold-deep: #b8862b;
+    --live: #e5484d;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    line-height: 1.5;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+
+  /* Header */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(13, 15, 20, .9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar { display: flex; align-items: center; gap: 20px; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 22px; letter-spacing: .3px; }
+  .logo-mark {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+    display: grid; place-items: center; color: #1a1305;
+  }
+  .logo span b { color: var(--gold); }
+  nav { margin-left: auto; display: flex; gap: 4px; }
+  nav a { padding: 8px 12px; border-radius: 8px; color: var(--muted); font-size: 15px; }
+  nav a:hover { color: var(--text); background: var(--panel); }
+  .live-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--live); color: #fff; font-weight: 700; font-size: 12px;
+    padding: 5px 10px; border-radius: 999px; letter-spacing: .8px;
+  }
+  .live-pill i { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 50% { opacity: .25; } }
+
+  /* Live area */
+  .stage { max-width: 960px; margin: 0 auto; padding: 24px 0 8px; }
+  .player {
+    position: relative; aspect-ratio: 16 / 9; background: #000;
+    border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line);
+  }
+  .player video, .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
+  .slate {
+    position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(233, 180, 76, .28), transparent 60%),
+      linear-gradient(180deg, #1b1f2a, #0b0d12);
+  }
+  .slate h2 { margin: 10px 0 4px; font-size: clamp(20px, 3.2vw, 34px); }
+  .slate p { margin: 0; color: var(--muted); }
+  .slate .cross { color: var(--gold); }
+  .now-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 14px; }
+  .now-bar h1 { margin: 0; font-size: clamp(20px, 2.6vw, 28px); }
+  .now-bar .meta { color: var(--muted); font-size: 14px; width: 100%; }
+  .back-live {
+    margin-left: auto; background: var(--gold); color: #1a1305; border: 0; cursor: pointer;
+    font-weight: 700; padding: 8px 14px; border-radius: 8px; font-size: 14px; display: none;
+  }
+
+  aside.side { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+  .side h3 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); }
+  .upnext { display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .upnext:first-of-type { border-top: 0; padding-top: 0; }
+  .upnext time { color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; min-width: 68px; font-size: 14px; }
+  .upnext b { display: block; font-size: 15px; }
+  .upnext small { color: var(--muted); }
+  .progress { height: 4px; background: var(--line); border-radius: 4px; margin-top: 8px; overflow: hidden; }
+  .progress i { display: block; height: 100%; background: var(--gold); width: 0; }
+  .verse { margin-top: 16px; padding: 14px; border-radius: 10px; background: var(--panel-2); border-left: 3px solid var(--gold); font-size: 14px; }
+  .verse cite { display: block; margin-top: 6px; color: var(--gold); font-style: normal; font-weight: 600; }
+
+  /* Sections */
+  section { padding: 44px 0 0; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+  .sec-head h2 { margin: 0; font-size: 24px; }
+  .sec-head p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  /* Schedule */
+  .guide { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .slot { display: grid; grid-template-columns: 96px 1fr auto; gap: 14px; align-items: center; padding: 13px 18px; border-top: 1px solid var(--line); }
+  .slot:first-child { border-top: 0; }
+  .slot time { color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .slot b { font-size: 16px; }
+  .slot small { display: block; color: var(--muted); }
+  .tag { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+  .slot.past { opacity: .5; }
+  .slot.on { background: linear-gradient(90deg, rgba(233, 180, 76, .16), transparent 70%); }
+  .slot.on time { color: var(--gold); }
+  .slot.on .tag { background: var(--live); border-color: var(--live); color: #fff; font-weight: 700; }
+
+  /* Programmes */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .chip { background: var(--panel); border: 1px solid var(--line); color: var(--muted); padding: 7px 14px; border-radius: 999px; cursor: pointer; font-size: 14px; font-family: inherit; }
+  .chip.active { background: var(--gold); border-color: var(--gold); color: #1a1305; font-weight: 700; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: transform .15s, border-color .15s; text-align: left; color: inherit; font-family: inherit; padding: 0; }
+  .card:hover, .card:focus-visible { transform: translateY(-3px); border-color: var(--gold); outline: none; }
+  .thumb { aspect-ratio: 16 / 9; display: grid; place-items: center; position: relative; background-size: cover; background-position: center; }
+  .thumb svg { opacity: .9; }
+  .thumb .dur { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.7); font-size: 12px; padding: 2px 7px; border-radius: 5px; }
+  .card .body { padding: 12px 14px 14px; }
+  .card b { display: block; font-size: 16px; }
+  .card small { color: var(--muted); }
+  .card .cat { color: var(--gold); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+
+  /* About */
+  .about { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+  .box h3 { margin: 0 0 10px; }
+  .box p { color: var(--muted); margin: 0 0 12px; }
+  .contact-row { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 15px; }
+  .contact-row span:first-child { color: var(--muted); min-width: 84px; }
+  .btn { display: inline-block; background: var(--gold); color: #1a1305; font-weight: 700; padding: 10px 18px; border-radius: 9px; margin-top: 8px; }
+
+  footer { margin-top: 56px; border-top: 1px solid var(--line); padding: 22px 0 32px; color: var(--muted); font-size: 14px; text-align: center; }
+
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--gold); padding: 10px 18px; border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 30; max-width: calc(100vw - 32px); }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 900px) {
+    .stage, .about { grid-template-columns: 1fr; }
+    nav a { padding: 8px; font-size: 14px; }
+  }
+  @media (max-width: 560px) {
+    nav { display: none; }
+    .bar .live-pill { margin-left: auto; }
+    .slot { grid-template-columns: 62px 1fr; }
+    .slot .tag { display: none; }
+    .slot.on .tag { display: inline-block; grid-column: 2; justify-self: start; }
+  }
+</style>
+</head>
+<body>
+
+<script>
+/* ============================================================
+   MANNATV SETTINGS — edit this block, nothing else is needed.
+   ============================================================ */
+const CONFIG = {
+  channelName: "MannaTV",
+  tagline: "Christian television for every home",
+
+  // LIVE STREAM — fill in ONE of these.
+  stream: {
+    hls: "",              // e.g. "https://your-provider.com/mannatv/live.m3u8"
+    youtubeChannelId: "", // e.g. "UCxxxxxxxxxxxxxxxxxxxxxx" (plays the channel's current live stream)
+    youtubeVideoId: ""    // e.g. "dQw4w9WgXcQ" (one fixed live video)
+  },
+
+  // PROGRAMMES ON DEMAND — put a YouTube video id in "youtube" (or an .mp4/.m3u8 link in "video")
+  // to make a card playable. "image" is an optional thumbnail picture link.
+  programmes: [
+    { title: "Daily Manna",            cat: "Devotion",    desc: "A short word for each day",     duration: "28 min", youtube: "", video: "", image: "" },
+    { title: "The Living Word",        cat: "Sermon",      desc: "Bible teaching series",         duration: "55 min", youtube: "", video: "", image: "" },
+    { title: "Songs of Praise",        cat: "Worship",     desc: "Praise and worship music",      duration: "45 min", youtube: "", video: "", image: "" },
+    { title: "Bible Study Hour",       cat: "Bible study", desc: "Verse-by-verse study",          duration: "60 min", youtube: "", video: "", image: "" },
+    { title: "Kids for Christ",        cat: "Kids",        desc: "Bible stories and songs",       duration: "30 min", youtube: "", video: "", image: "" },
+    { title: "Youth Alive",            cat: "Youth",       desc: "Faith for a new generation",    duration: "40 min", youtube: "", video: "", image: "" },
+    { title: "Testimonies",            cat: "Testimony",   desc: "Real stories of changed lives", duration: "35 min", youtube: "", video: "", image: "" },
+    { title: "Evening Gospel Meeting", cat: "Sermon",      desc: "Gospel messages",               duration: "75 min", youtube: "", video: "", image: "" }
+  ],
+
+  about: "MannaTV is a Christian television channel sharing the Gospel through worship, Bible teaching, prayer and family programmes, all day, every day.",
+
+  // CONTACT — leave any line empty ("") to hide it.
+  contact: { phone: "", whatsapp: "", email: "", address: "", youtube: "", facebook: "", donateUrl: "" }
+};
+</script>
+
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="#top">
+      <div class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M12 3v18M6 9h12"/></svg>
+      </div>
+      <span>Manna<b>TV</b></span>
+    </a>
+    <nav>
+      <a href="#top">Live</a>
+      <a href="#programmes">Programmes</a>
+      <a href="#about">About</a>
+    </nav>
+    <span class="live-pill"><i></i>LIVE</span>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <div class="stage">
+    <div>
+      <div class="player" id="player"></div>
+      <div class="now-bar">
+        <span class="live-pill" id="nowPill"><i></i>ON AIR</span>
+        <h1 id="nowTitle"></h1>
+        <button class="back-live" id="backLive">Back to live</button>
+        <div class="meta" id="nowMeta"></div>
+      </div>
+    </div>
+  </div>
+
+  <section id="programmes">
+    <div class="sec-head"><h2>Our programmes</h2></div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="about">
+    <div class="sec-head"><h2>About MannaTV</h2></div>
+    <div class="about">
+      <div class="box">
+        <h3 id="aboutTag"></h3>
+        <p id="aboutText"></p>
+        <a class="btn" id="donate" target="_blank" rel="noopener" hidden>Support the ministry</a>
+      </div>
+      <div class="box">
+        <h3>Contact and prayer requests</h3>
+        <div id="contact"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">© <span id="year"></span> MannaTV. All rights reserved.</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const CAT_COLORS = { Worship: ["#7b4bd6", "#2b1a5c"], Sermon: ["#c98a1d", "#4a2f08"], Prayer: ["#2f7fd1", "#10294a"], Devotion: ["#d1663a", "#4a1d0e"],
+    "Bible study": ["#2a9d74", "#0c3a2b"], Kids: ["#e0559a", "#4d1233"], Youth: ["#27a7b8", "#0b3840"], Testimony: ["#a8b33a", "#353a0d"], Family: ["#c2577a", "#431527"] };
+
+  let hls = null, watchingLive = true;
+
+  /* ---------- Player ---------- */
+  function clearPlayer() { if (hls) { hls.destroy(); hls = null; } $("player").replaceChildren(); }
+
+  function playVideoUrl(url, live) {
+    clearPlayer();
+    const v = el("video");
+    v.controls = true; v.autoplay = true; v.playsInline = true; v.muted = live;
+    $("player").append(v);
+    if (/\.m3u8(\?|$)/i.test(url) && window.Hls && Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(url); hls.attachMedia(v);
+      hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) slate("We'll be right back", "The live stream is not available at the moment. Please try again shortly."); });
+    } else {
+      v.src = url;
+      v.addEventListener("error", () => slate("We'll be right back", "This video is not available at the moment."));
+    }
+    v.play().catch(() => {});
+  }
+
+  function playYouTube(src) {
+    clearPlayer();
+    const f = el("iframe");
+    f.src = src; f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen = true;
+    f.title = CONFIG.channelName + " player";
+    $("player").append(f);
+  }
+
+  function slate(title, text) {
+    clearPlayer();
+    const s = el("div", "slate"), inner = el("div");
+    inner.innerHTML = '<svg class="cross" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v18M6 9h12"/></svg>';
+    inner.append(el("h2", "", title), el("p", "", text));
+    s.append(inner); $("player").append(s);
+  }
+
+  function goLive() {
+    watchingLive = true;
+    $("backLive").style.display = "none";
+    $("nowPill").style.display = "";
+    const s = CONFIG.stream;
+    if (s.hls) playVideoUrl(s.hls, true);
+    else if (s.youtubeVideoId) playYouTube("https://www.youtube.com/embed/" + encodeURIComponent(s.youtubeVideoId) + "?autoplay=1&mute=1");
+    else if (s.youtubeChannelId) playYouTube("https://www.youtube.com/embed/live_stream?channel=" + encodeURIComponent(s.youtubeChannelId) + "&autoplay=1&mute=1");
+    else slate(CONFIG.channelName + " live stream", "The live stream link has not been added yet.");
+    $("nowTitle").textContent = CONFIG.channelName + " Live";
+    $("nowMeta").textContent = CONFIG.tagline;
+  }
+
+  function playProgramme(p) {
+    if (!p.youtube && !p.video) {
+      toast(p.title + " will be available to watch soon.");
+      return;
+    }
+    watchingLive = false;
+    if (p.youtube) playYouTube("https://www.youtube.com/embed/" + encodeURIComponent(p.youtube) + "?autoplay=1");
+    else playVideoUrl(p.video, false);
+    $("nowTitle").textContent = p.title;
+    $("nowMeta").textContent = p.desc;
+    $("nowPill").style.display = "none";
+    $("backLive").style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  let toastTimer;
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 3500); }
+
+  /* ---------- Programmes ---------- */
+  function buildProgrammes() {
+    CONFIG.programmes.forEach(p => {
+      const card = el("button", "card"), th = el("div", "thumb"), body = el("div", "body");
+      const [c1, c2] = CAT_COLORS[p.cat] || ["#e9b44c", "#4a2f08"];
+      th.style.backgroundImage = p.image ? 'url("' + encodeURI(p.image) + '")' : "linear-gradient(135deg," + c1 + "," + c2 + ")";
+      th.innerHTML = '<svg width="46" height="46" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="11" fill="rgba(0,0,0,.35)"/><path d="M10 8l6 4-6 4z"/></svg>';
+      body.append(el("b", "", p.title), el("small", "", p.desc));
+      card.append(th, body);
+      card.addEventListener("click", () => playProgramme(p));
+      $("grid").append(card);
+    });
+  }
+
+  /* ---------- About / contact ---------- */
+  function buildAbout() {
+    $("aboutTag").textContent = CONFIG.tagline;
+    $("aboutText").textContent = CONFIG.about;
+    const c = CONFIG.contact;
+    const rows = [["Phone", c.phone, c.phone && "tel:" + c.phone], ["WhatsApp", c.whatsapp, c.whatsapp && "https://wa.me/" + c.whatsapp.replace(/\D/g, "")],
+      ["Email", c.email, c.email && "mailto:" + c.email], ["Address", c.address, ""], ["YouTube", c.youtube, c.youtube], ["Facebook", c.facebook, c.facebook]];
+    rows.filter(r => r[1]).forEach(([label, value, href]) => {
+      const row = el("div", "contact-row"); row.append(el("span", "", label));
+      if (href) { const a = el("a", "", value); a.href = href; a.target = "_blank"; a.rel = "noopener"; row.append(a); } else row.append(el("span", "", value));
+      $("contact").append(row);
+    });
+    if (!$("contact").children.length) $("contact").append(el("p", "", "Contact details coming soon."));
+    if (c.donateUrl) { $("donate").href = c.donateUrl; $("donate").hidden = false; }
+    $("year").textContent = new Date().getFullYear();
+  }
+
+  $("backLive").addEventListener("click", goLive);
+  buildProgrammes(); buildAbout(); goLive();
+})();
+</script>
+</body>
+</html>
